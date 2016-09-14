@@ -3,8 +3,9 @@
 #include <stdlib.h>
 
 #include "shell.h"
+#include "linkedlist.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) { 
 
     if (!shell_loop()) {
         return 0;
