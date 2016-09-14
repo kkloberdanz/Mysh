@@ -3,12 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shell.h"
+#include "shell.h" 
 
 char* get_line_from_stdin() {
     char c = 'a';
     char* buffer = malloc(sizeof(char) * READ_BUFFER_SIZE);
 
+    /*
+     * TODO:
+     *     Rewrite so that if READ_BUFFER_SIZE is exceeded, more
+     *     memory is allocated to buffer
+     */
     int i; 
     for(i = 0; (i < READ_BUFFER_SIZE) && (c != '\n'); ++i) {
         c = getchar();
@@ -20,12 +25,22 @@ char* get_line_from_stdin() {
         exit(EXIT_FAILURE);
     }
 
-    buffer[i] = '\0'; 
     return buffer;
 }
 
+void clean_input(char* buffer) { 
+    int i;
+    for (i = 0; buffer[i] != '\0'; ++i) {
+        if (buffer[i] == '\n') {
+            buffer[i] = '\0';
+            return;
+        }
+    }
+}
+
 int shell_loop(void) {
-    int exit_status, i;
+    const char* exit_str = "exit";
+    int exit_status;
     char* input_line; 
 
     do {
@@ -33,11 +48,13 @@ int shell_loop(void) {
 
         input_line = get_line_from_stdin();
 
-        printf("out: %s\n", input_line); 
+        clean_input(input_line);
 
+        printf("out: '%s'\n", input_line); 
+
+
+        exit_status = strcmp(input_line, exit_str); 
         free(input_line);
-
-        exit_status = strcmp(input_line, "exit\n"); 
     } while (exit_status != 0); 
 
     return 0;
