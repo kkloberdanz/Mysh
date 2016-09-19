@@ -1,4 +1,4 @@
-C++ = gcc
+CC = gcc
 CFLAGS = -O2 -Wall -Wextra -Wpedantic
 BUILD_DIR = Build
 
@@ -7,16 +7,16 @@ BUILD_DIR = Build
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/shell.o $(BUILD_DIR)/linkedlist.o
 
 mysh: $(OBJS)
-	$(C++) -o Bin/mysh $(CFLAGS) $(OBJS) 
+	$(CC) -o Bin/mysh $(CFLAGS) $(OBJS) 
 
 $(BUILD_DIR)/main.o: main.c
-	$(C++) $(CFLAGS) -o $(BUILD_DIR)/main.o -c main.c
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/main.o -c main.c
 
 $(BUILD_DIR)/shell.o: shell.c shell.h
-	$(C++) $(CFLAGS) -o $(BUILD_DIR)/shell.o -c shell.c
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/shell.o -c shell.c
 
 $(BUILD_DIR)/linkedlist.o: linkedlist.c linkedlist.h
-	$(C++) $(CFLAGS) -o $(BUILD_DIR)/linkedlist.o -c linkedlist.c
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/linkedlist.o -c linkedlist.c
 
 clean:
 	rm -rf Bin/*
