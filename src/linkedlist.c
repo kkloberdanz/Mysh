@@ -39,10 +39,15 @@ void ll_print(struct Node* head) {
     //printf("%s]\n", head->word); 
 }
 
+struct Node* ll_get_next_node(struct Node* head) {
+    return head->next;
+}
+
 void ll_destroy(struct Node* head) {
     if (head->next != NULL) {
         ll_destroy(head->next);
         free(head);
         return;
     }
+    free(head);
 }
