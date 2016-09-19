@@ -18,41 +18,25 @@ void ll_push_node(struct Node* head, char* word) {
     head->next = NULL;
 
     int i;
-    for (i = 0; i < READ_BUFFER_SIZE; ++i) {
-        head->word[i] = '\0';
+    for (i = 0; word[i] != '\0'; ++i) {
+        head->word[i] = word[i];
     }
-
-    strcat(head->word, word);
+    head->word[i] = '\0'; 
 }
 
 void ll_print(struct Node* head) {
 
     if (head == NULL) {
-        printf("Empty list\n");
-        return;
-    }
-
-    printf("[");
-    while (head->next != NULL) {
-        printf("%s, ", head->word);
-        head = head->next;
-    }
-    printf("%s]\n", head->word);
-
-    /*
-    printf("[");
-
-    if (head == NULL) {
-        printf("]");
+        printf("[]\n");
         return;
     }
 
     while (head->next != NULL) {
-        printf("%s, ", head->word);
+        printf("%s, ", head->next->word);
         head = head->next;
     }
-    printf("]\n");
-    */ 
+    printf("\n");
+    //printf("%s]\n", head->word); 
 }
 
 void ll_destroy(struct Node* head) {

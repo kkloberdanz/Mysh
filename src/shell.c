@@ -55,6 +55,7 @@ void clean_input(char* buffer) {
         if (buffer[i] == '\n') {
             buffer[i] = '\0';
             ll_push_node(command_list, cmd);
+            printf("Pushing: '%s'\n", cmd);
             ll_print(command_list);
             ll_destroy(command_list);
             return; 
@@ -69,6 +70,7 @@ void clean_input(char* buffer) {
                    (cmd[0] != '\0')   && 
                    (cmd[0] != ' ')){
             ll_push_node(command_list, cmd);
+            printf("Pushing: '%s'\n", cmd);
             int j;
             for (j = 0; j < cmd_counter; ++j) {
                 cmd[j] = '\0';
