@@ -1,7 +1,7 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#define READ_BUFFER_SIZE 1024
+#include "globals.h"
 
 /*
  * Reads a line from stdin onto heap space.
@@ -9,6 +9,19 @@
  * that is returned
  */
 char* get_line_from_stdin();
+
+/*
+ * Returns a linked list of the parsed commands
+ * Use this linked list to execute the commands in the shell
+ * !!! Be sure to call ll_destroy() to free memory from list !!!
+ */
+struct Node* clean_input(char*);
+
+/*
+ * Takes a linked list as input.
+ * executes commands sequentially as they are found in the linked list
+ */
+void execute_command(struct Node*);
 
 /*
  * Continues to loop until 'exit' is read from stdin, or an error occurs

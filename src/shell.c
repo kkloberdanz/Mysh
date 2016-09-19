@@ -80,6 +80,7 @@ struct Node* clean_input(char* buffer) {
             cmd_counter = 0;
         }
     }
+    return NULL; /* This should never happen! */
 }
 
 void execute_command(struct Node* start_of_command_list) {
@@ -123,6 +124,9 @@ int shell_loop(void) {
         input_line = get_line_from_stdin();
 
         cmd_list = clean_input(input_line);
+        if (cmd_list == NULL) {
+            return EXIT_FAILURE;
+        }
 
         printf("out: '%s'\n", input_line); 
 
