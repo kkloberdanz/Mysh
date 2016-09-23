@@ -72,7 +72,7 @@ struct Node* clean_input(char* buffer) {
                    (cmd[0] != '\0')   && 
                    (cmd[0] != ' ')){
             ll_push_node(command_list, cmd);
-            printf("Pushing: '%s'\n", cmd);
+            //printf("Pushing: '%s'\n", cmd);
             int j;
             for (j = 0; j < cmd_counter; ++j) {
                 cmd[j] = '\0';
@@ -90,7 +90,7 @@ void execute_command(struct Node* start_of_command_list) {
          current_command != NULL;
          current_command = current_command->next) {
 
-        printf("cmd: '%s'\n", current_command->word);
+        //printf("cmd: '%s'\n", current_command->word);
 
         /*
          * TODO:
@@ -106,10 +106,40 @@ void execute_command(struct Node* start_of_command_list) {
 
         if ( strcmp(current_command->word, "exit") == 0) {
             return;
-        }
 
-        // This is only for demonstration, use execvp instead
-        system(current_command->word);
+        } else if ( strcmp(current_command->word, "cd") == 0) { 
+            if (current_command->next != NULL) {
+                current_command = current_command->next;
+                chdir(current_command->word);
+            } else {
+                chdir(getenv("HOME"));
+            }
+
+        } else {
+            /*
+             * TODO:
+             *     Handle > and & here
+             */
+            char* command = calloc(READ_BUFFER_SIZE, sizeof(char));
+            while (1) {
+                strcat(command, current_command->word);
+                strcat(command, " ");
+                if (current_command->next != NULL) {
+                    current_command = current_command->next;
+                } else {
+                    break;
+                }
+            }
+
+            /*
+             * TODO:
+             *     fork() here
+             */
+            // This is only for demonstration, use execvp instead 
+            system(command);
+
+            free(command);
+        }
     }
 }
 
@@ -118,8 +148,17 @@ int shell_loop(void) {
     char* input_line; 
     struct Node* cmd_list;
 
+    char curr_dir[READ_BUFFER_SIZE];
+    char curr_usr[READ_BUFFER_SIZE];
+    char hostname[READ_BUFFER_SIZE];
+
     while (1) {
-        printf("%c ", '>');
+
+        gethostname(hostname, READ_BUFFER_SIZE);
+        getlogin_r(curr_usr, READ_BUFFER_SIZE);
+        getcwd(curr_dir, READ_BUFFER_SIZE);
+
+        printf("[%s@%s %s]$ ", curr_usr, hostname ,curr_dir);
 
         input_line = get_line_from_stdin();
 
@@ -128,7 +167,7 @@ int shell_loop(void) {
             return EXIT_FAILURE;
         }
 
-        printf("out: '%s'\n", input_line); 
+        //printf("out: '%s'\n", input_line); 
 
         execute_command(cmd_list);
 
