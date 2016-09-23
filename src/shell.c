@@ -16,16 +16,17 @@ char* get_line_from_stdin() {
      *     memory is allocated to buffer
      */
     int i; 
-    for(i = 0; (i < READ_BUFFER_SIZE) && (c != '\n'); ++i) {
+    for(i = 0; c != '\n'; ++i) {
+
+        if (i >= READ_BUFFER_SIZE) {
+            fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
+            free(buffer);
+            return NULL;
+        }
+
         c = getchar();
         buffer[i] = c;
-    }
-
-    if (i >= READ_BUFFER_SIZE) {
-        fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
-        exit(EXIT_FAILURE);
-    }
-
+    } 
     return buffer;
 }
 
@@ -113,15 +114,20 @@ void execute_command(struct Node* start_of_command_list) {
     }
 }
 
-int shell_loop(void) {
+int shell_loop(void) { 
+
     int exit_status;
     char* input_line; 
-    struct Node* cmd_list;
+    struct Node* cmd_list; 
 
     while (1) {
         printf("%c ", '>');
 
         input_line = get_line_from_stdin();
+
+        if (input_line == NULL) {
+            continue;
+        }
 
         cmd_list = clean_input(input_line);
         if (cmd_list == NULL) {
@@ -130,8 +136,7 @@ int shell_loop(void) {
 
         printf("out: '%s'\n", input_line); 
 
-        execute_command(cmd_list);
-
+        execute_command(cmd_list); 
         
         exit_status = strcmp(input_line, "exit"); 
         free(input_line);
