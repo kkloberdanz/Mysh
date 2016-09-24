@@ -62,6 +62,12 @@ struct Node* clean_input(char* buffer) {
             ll_destroy(command_list);
             */
 
+        } else if (buffer[i] == '>') {
+            ll_push_node(command_list, ">");
+
+        } else if (buffer[i] == '&') {
+            ll_push_node(command_list, "&");
+
         /* if not space, then build cmd */
         } else if (buffer[i] != ' ') {
             cmd[cmd_counter] = buffer[i];
@@ -169,6 +175,7 @@ int shell_loop(void) {
 
         //printf("out: '%s'\n", input_line); 
 
+        ll_print(cmd_list);
         execute_command(cmd_list);
 
         

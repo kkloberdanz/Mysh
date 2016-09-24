@@ -1,0 +1,11 @@
+Bin
+Build
+configure.py
+globals.h
+linkedlist.c
+linkedlist.h
+main.c
+Makefile
+out
+shell.c
+shell.h
