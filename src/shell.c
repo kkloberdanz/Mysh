@@ -155,12 +155,11 @@ void execute_command(struct Node* start_of_command_list) {
                     command[i] = strdup(current_command->word);
                 } else {
                     strcat(output_filename, current_command->next->word);
-                    /*
-                     * TODO:
-                     *     check if more files given
-                     */
+
+                    // check if multiple files specifed, this is not
+                    // allowed ('&' is ok!)
                     if ((current_command->next->next != NULL) && 
-                 (strcmp(current_command->next->next->word, "&") != 0)) {
+                        (strcmp(current_command->next->next->word, "&") != 0)) {
                         printf(current_command->next->next->word);
                         fprintf(stderr,
                                 "error: cannot redirect to multiple files\n");
@@ -178,19 +177,18 @@ void execute_command(struct Node* start_of_command_list) {
             }
             command[i+1] = NULL;
 
-            /*
-             * TODO:
-             * Redirect output
-             */
+            // Redirect output
             if (output_filename[0] != '\0') {
 				int output_file = open(output_filename, 
                                        O_RDWR|O_CREAT, 
                                        0600);
+
 				if (output_file == -1) { 
-                    fprintf(stderr, "error: could not open file to redirect\n");
+                    fprintf(stderr, 
+                            "error: could not open file to redirect\n");
                 } 
 
-				int save_out = dup(fileno(stdout));
+				int save_output_file = dup(fileno(stdout));
 
 				if (dup2(output_file, fileno(stdout)) == -1) { 
                     fprintf(stderr, "error: could not redirect stdout\n");
@@ -201,11 +199,10 @@ void execute_command(struct Node* start_of_command_list) {
 				fflush(stdout); 
                 close(output_file);
 
-				dup2(save_out, fileno(stdout)); 
-				close(save_out);
-
-
+				dup2(save_output_file, fileno(stdout)); 
+				close(save_output_file); 
                 break;
+
             } else { 
 
                 // Not redirecting stdout, run as normal
