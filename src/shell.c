@@ -2,13 +2,15 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include "shell.h" 
 #include "linkedlist.h" 
 
 char* get_line_from_stdin() {
     char c = 'a';
-    char* buffer = malloc(sizeof(char) * READ_BUFFER_SIZE);
+    char* buffer = calloc(READ_BUFFER_SIZE, sizeof(char));
 
     /*
      * TODO:
@@ -29,7 +31,7 @@ char* get_line_from_stdin() {
     return buffer;
 }
 
-struct Node* clean_input(char* buffer) { 
+struct Node* clean_input(char* buffer) {
     int i;
     /*
      * TODO:
@@ -89,6 +91,22 @@ struct Node* clean_input(char* buffer) {
     return NULL; /* This should never happen! */
 }
 
+void run_command_as_child_process(char** command) { 
+    int rc = fork();
+
+    if ((rc < 0)) { 
+        fprintf(stderr, "error: fork failed\n");
+        exit(EXIT_FAILURE);
+
+    } else if (rc == 0) {
+        execvp(*command, command);
+        printf("This should not print\n"); 
+
+    } else {
+        int wc = wait(NULL);
+    } 
+}
+
 void execute_command(struct Node* start_of_command_list) {
 
     struct Node* current_command;
@@ -126,25 +144,76 @@ void execute_command(struct Node* start_of_command_list) {
              * TODO:
              *     Handle > and & here
              */
-            char* command = calloc(READ_BUFFER_SIZE, sizeof(char));
+
+            //char* command = calloc(READ_BUFFER_SIZE, sizeof(char));
+            char* output_filename = calloc(READ_BUFFER_SIZE, sizeof(char));
+            output_filename[0] = '\0';
+
+            char* command[READ_BUFFER_SIZE];
+
+            int i = 0;
             while (1) {
-                strcat(command, current_command->word);
-                strcat(command, " ");
+                if (strcmp(current_command->word, ">") != 0) {
+                    /*
+                    strcat(command, current_command->word);
+                    strcat(command, " ");
+                    */
+                    //strcpy(command[i], current_command->word);
+                    command[i] = strdup(current_command->word);
+                } else {
+                    strcat(output_filename, current_command->next->word);
+                    /*
+                     * TODO:
+                     *     check if more files given
+                     */
+                    break;
+                }
+
                 if (current_command->next != NULL) {
                     current_command = current_command->next;
                 } else {
                     break;
                 }
+                i++;
             }
+            command[i+1] = NULL;
 
             /*
-             * TODO:
-             *     fork() here
+             * Redirect output
              */
-            // This is only for demonstration, use execvp instead 
-            system(command);
+            /*
+            if (output_filename[0] != '\0') {
+				int out = open("cout.log", O_RDWR|O_CREAT|O_APPEND, 0600);
+				if (-1 == out) { perror("opening cout.log"); return 255; }
 
-            free(command);
+				int err = open("cerr.log", O_RDWR|O_CREAT|O_APPEND, 0600);
+				if (-1 == err) { perror("opening cerr.log"); return 255; }
+
+				int save_out = dup(fileno(stdout));
+				int save_err = dup(fileno(stderr));
+
+				if (-1 == dup2(out, fileno(stdout))) { perror("cannot redirect stdout"); return 255; }
+				if (-1 == dup2(err, fileno(stderr))) { perror("cannot redirect stderr"); return 255; }
+
+				//puts("doing an ls or something now");
+                system("ls");
+
+				fflush(stdout); close(out);
+				fflush(stderr); close(err);
+
+				dup2(save_out, fileno(stdout));
+				dup2(save_err, fileno(stderr));
+
+				close(save_out);
+				close(save_err);
+
+				puts("back to normal output");
+
+                break;
+            }
+            */
+
+            run_command_as_child_process(command);
         }
     }
 }
