@@ -155,28 +155,28 @@ void execute_command(struct Node* start_of_command_list) {
 
             // Redirect output
             if (output_filename[0] != '\0') {
-				int output_file = open(output_filename, 
+                int output_file = open(output_filename, 
                                        O_RDWR|O_CREAT, 
                                        0600);
 
-				if (output_file == -1) { 
+                if (output_file == -1) { 
                     fprintf(stderr, 
                             "error: could not open file to redirect\n");
                 } 
 
-				int save_output_file = dup(fileno(stdout));
+                int save_output_file = dup(fileno(stdout));
 
-				if (dup2(output_file, fileno(stdout)) == -1) { 
+                if (dup2(output_file, fileno(stdout)) == -1) { 
                     fprintf(stderr, "error: could not redirect stdout\n");
                 }
 
                 run_command_as_child_process(command);
 
-				fflush(stdout); 
+                fflush(stdout); 
                 close(output_file);
 
-				dup2(save_output_file, fileno(stdout)); 
-				close(save_output_file); 
+                dup2(save_output_file, fileno(stdout)); 
+                close(save_output_file); 
                 break;
 
             } else { 
