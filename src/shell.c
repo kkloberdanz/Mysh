@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include "shell.h" 
 #include "linkedlist.h" 
@@ -19,11 +20,9 @@ void read_from_file(char* batchFile){
         struct Node* cmd_list = calloc(READ_BUFFER_SIZE, sizeof(struct Node));
         ll_initialize(cmd_list);
         c = fgetc(fp);
-        printf("%c", c);
         buffer[i] = c;
         if (c == '\n') {
 
-            printf("buff: %s\n", buffer);
             cmd_list = clean_input(buffer);
 
             if (cmd_list == NULL) {
@@ -38,6 +37,19 @@ void read_from_file(char* batchFile){
         } else {
             i++;
         }
+
+        if (i >= READ_BUFFER_SIZE) {
+            fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
+
+            while(c != '\n'){
+                c = getchar();
+            } 
+
+            int j;
+            for (j = 0; j < READ_BUFFER_SIZE; ++j) {
+                buffer[0] = '\0';
+            } 
+        }
     }
     fclose(fp);
 }
@@ -48,19 +60,19 @@ char* get_line_from_stdin() {
 
     int i; 
     for(i = 0; (i < READ_BUFFER_SIZE) && (c != '\n'); ++i) {
-	c = getchar();
+        c = getchar();
         buffer[i] = c;
     }
 
     if (i >= READ_BUFFER_SIZE) {
         fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
 
-	while(c != '\n'){
-	    c = getchar();
-	}
+        while(c != '\n'){
+            c = getchar();
+        }
 
-	free(buffer);
-	return NULL;
+        free(buffer);
+        return NULL;
     }
 
     return buffer;
@@ -189,7 +201,17 @@ void execute_command(struct Node* start_of_command_list) {
         } else if ( strcmp(current_command->word, "cd") == 0) { 
             if (current_command->next != NULL) {
                 current_command = current_command->next;
-                chdir(current_command->word);
+                struct stat st;
+                if (stat(current_command->word, &st) == 0) {
+                    chdir(current_command->word);
+
+                } else if (current_command->word[0] == '\0') {
+                    chdir(getenv("HOME"));
+
+                } else {
+                    fprintf(stderr, "error: '%s' no such directory\n", 
+                            current_command->word);
+                }
             } else {
                 chdir(getenv("HOME"));
             }
