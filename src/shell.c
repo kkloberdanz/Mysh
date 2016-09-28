@@ -12,11 +12,6 @@ char* get_line_from_stdin() {
     char c = 'a';
     char* buffer = calloc(READ_BUFFER_SIZE, sizeof(char));
 
-    /*
-     * TODO:
-     *     Rewrite so that if READ_BUFFER_SIZE is exceeded, more
-     *     memory is allocated to buffer
-     */
     int i; 
     for(i = 0; (i < READ_BUFFER_SIZE) && (c != '\n'); ++i) {
         c = getchar();
@@ -57,12 +52,7 @@ struct Node* clean_input(char* buffer) {
         if (buffer[i] == '\n') {
             buffer[i] = '\0';
             ll_push_node(command_list, cmd);
-            //printf("Pushing: '%s'\n", cmd);
             return command_list;
-            /*
-            ll_print(command_list);
-            ll_destroy(command_list);
-            */
 
         } else if (buffer[i] == '>') {
             ll_push_node(command_list, ">");
@@ -111,21 +101,7 @@ void execute_command(struct Node* start_of_command_list) {
     struct Node* current_command;
     for (current_command = start_of_command_list->next;
          current_command != NULL;
-         current_command = current_command->next) {
-
-        //printf("cmd: '%s'\n", current_command->word);
-
-        /*
-         * TODO:
-         *     current_command->word holds the string that needs to
-         *     be executed.
-         *
-         *     Perhaps do strcmp over a series of if else's to detect
-         *     characters such as '&' and '>' (Assuming these need to
-         *     be treated differently), then use fork() and execvp() * *
-         *     with the other commands.
-         *     
-         */
+         current_command = current_command->next) { 
 
         if ( strcmp(current_command->word, "exit") == 0) {
             return;
@@ -141,7 +117,7 @@ void execute_command(struct Node* start_of_command_list) {
         } else {
             /*
              * TODO:
-             *     Handle > and & here
+             *     Handle &
              */
 
             char output_filename[READ_BUFFER_SIZE];
