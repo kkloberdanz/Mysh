@@ -100,10 +100,9 @@ void run_command_as_child_process(char** command) {
 
     } else if (rc == 0) {
         execvp(*command, command);
-        printf("This should not print\n"); 
 
     } else {
-        int wc = wait(NULL);
+        wait(NULL);
     } 
 }
 
@@ -145,7 +144,7 @@ void execute_command(struct Node* start_of_command_list) {
              *     Handle > and & here
              */
 
-            char* output_filename = calloc(READ_BUFFER_SIZE, sizeof(char));
+            char output_filename[READ_BUFFER_SIZE];
             output_filename[0] = '\0';
 
             char* command[READ_BUFFER_SIZE];
@@ -160,6 +159,13 @@ void execute_command(struct Node* start_of_command_list) {
                      * TODO:
                      *     check if more files given
                      */
+                    if ((current_command->next->next != NULL) && 
+                 (strcmp(current_command->next->next->word, "&") != 0)) {
+                        printf(current_command->next->next->word);
+                        fprintf(stderr,
+                                "error: cannot redirect to multiple files\n");
+                        return;
+                    }
                     break;
                 }
 
@@ -173,42 +179,38 @@ void execute_command(struct Node* start_of_command_list) {
             command[i+1] = NULL;
 
             /*
+             * TODO:
              * Redirect output
              */
-            /*
             if (output_filename[0] != '\0') {
-				int out = open("cout.log", O_RDWR|O_CREAT|O_APPEND, 0600);
-				if (-1 == out) { perror("opening cout.log"); return 255; }
-
-				int err = open("cerr.log", O_RDWR|O_CREAT|O_APPEND, 0600);
-				if (-1 == err) { perror("opening cerr.log"); return 255; }
+				int output_file = open(output_filename, 
+                                       O_RDWR|O_CREAT, 
+                                       0600);
+				if (output_file == -1) { 
+                    fprintf(stderr, "error: could not open file to redirect\n");
+                } 
 
 				int save_out = dup(fileno(stdout));
-				int save_err = dup(fileno(stderr));
 
-				if (-1 == dup2(out, fileno(stdout))) { perror("cannot redirect stdout"); return 255; }
-				if (-1 == dup2(err, fileno(stderr))) { perror("cannot redirect stderr"); return 255; }
+				if (dup2(output_file, fileno(stdout)) == -1) { 
+                    fprintf(stderr, "error: could not redirect stdout\n");
+                }
 
-				//puts("doing an ls or something now");
-                system("ls");
+                run_command_as_child_process(command);
 
-				fflush(stdout); close(out);
-				fflush(stderr); close(err);
+				fflush(stdout); 
+                close(output_file);
 
-				dup2(save_out, fileno(stdout));
-				dup2(save_err, fileno(stderr));
-
+				dup2(save_out, fileno(stdout)); 
 				close(save_out);
-				close(save_err);
 
-				puts("back to normal output");
 
                 break;
-            }
-            */
+            } else { 
 
-            run_command_as_child_process(command);
-            free(output_filename);
+                // Not redirecting stdout, run as normal
+                run_command_as_child_process(command);
+            }
         }
     }
 }
@@ -239,7 +241,7 @@ int shell_loop(void) {
 
         //printf("out: '%s'\n", input_line); 
 
-        ll_print(cmd_list);
+        //ll_print(cmd_list);
         execute_command(cmd_list);
 
         
