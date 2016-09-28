@@ -89,7 +89,7 @@ char* get_line_from_stdin() {
 struct Node* clean_input(char* buffer) {
     int i;
     struct Node* command_list;
-    command_list = malloc(sizeof(command_list));
+    command_list = malloc(sizeof(struct Node));
     ll_initialize(command_list);
 
     /* Remove spaces before token */ 
@@ -126,7 +126,6 @@ struct Node* clean_input(char* buffer) {
                    (cmd[0] != '\0')   && 
                    (cmd[0] != ' ')){
             ll_push_node(command_list, cmd);
-            //printf("Pushing: '%s'\n", cmd);
             int j;
             for (j = 0; j < cmd_counter; ++j) {
                 cmd[j] = '\0';
@@ -150,6 +149,31 @@ void run_command_as_child_process(char** command) {
     } else {
         wait(NULL);
     } 
+}
+
+void redirect_output_to_file(char** command, char* output_filename) { 
+    int output_file = open(output_filename, 
+                           O_RDWR|O_CREAT, 
+                           0600);
+
+    if (output_file == -1) { 
+        fprintf(stderr, 
+                "error: could not open file to redirect\n");
+    } 
+
+    int save_output_file = dup(fileno(stdout));
+
+    if (dup2(output_file, fileno(stdout)) == -1) { 
+        fprintf(stderr, "error: could not redirect stdout\n");
+    }
+
+    run_command_as_child_process(command);
+
+    fflush(stdout); 
+    close(output_file);
+
+    dup2(save_output_file, fileno(stdout)); 
+    close(save_output_file); 
 }
 
 void execute_command(struct Node* start_of_command_list) {
@@ -211,33 +235,11 @@ void execute_command(struct Node* start_of_command_list) {
 
             // Redirect output
             if (output_filename[0] != '\0') {
-                int output_file = open(output_filename, 
-                                       O_RDWR|O_CREAT, 
-                                       0600);
-
-                if (output_file == -1) { 
-                    fprintf(stderr, 
-                            "error: could not open file to redirect\n");
-                } 
-
-                int save_output_file = dup(fileno(stdout));
-
-                if (dup2(output_file, fileno(stdout)) == -1) { 
-                    fprintf(stderr, "error: could not redirect stdout\n");
-                }
-
-                run_command_as_child_process(command);
-
-                fflush(stdout); 
-                close(output_file);
-
-                dup2(save_output_file, fileno(stdout)); 
-                close(save_output_file); 
+                redirect_output_to_file(command, output_filename);
                 break;
 
+            // Not redirecting stdout, run as normal
             } else { 
-
-                // Not redirecting stdout, run as normal
                 run_command_as_child_process(command);
             }
         }
