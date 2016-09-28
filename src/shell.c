@@ -165,7 +165,7 @@ void run_command_as_child_process(char** command) {
 
 void redirect_output_to_file(char** command, char* output_filename) { 
     int output_file = open(output_filename, 
-                           O_RDWR|O_CREAT, 
+                           O_RDWR|O_CREAT,
                            0600);
 
     if (output_file == -1) { 
@@ -214,6 +214,13 @@ void execute_command(struct Node* start_of_command_list) {
                 }
             } else {
                 chdir(getenv("HOME"));
+            }
+
+        } else if ( strcmp(current_command->word, "pwd") == 0) {
+            char  tmp_buff[MAX_PATH_LEN];
+            char* cwd = getcwd(tmp_buff, MAX_PATH_LEN);
+            if (cwd != NULL) {
+                fprintf(stdout, "%s\n", cwd);
             }
 
         } else {

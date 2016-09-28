@@ -13,15 +13,18 @@ void ll_push_node(struct Node* head, char* word) {
     while (head->next != NULL) {
         head = head->next;
     }
-    head->next = malloc(sizeof(struct Node));
+    head->next = calloc(1, sizeof(struct Node));
     head = head->next;
     head->next = NULL;
 
+    /*
     int i;
     for (i = 0; word[i] != '\0'; ++i) {
         head->word[i] = word[i];
     }
     head->word[i] = '\0'; 
+    */
+    strcat(head->word, word);
 }
 
 void ll_print(struct Node* head) {
