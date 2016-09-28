@@ -17,7 +17,8 @@ void read_from_file(char* batchFile){
     char c = 'a';
     int i = 0;
     while (c != EOF) {
-        struct Node* cmd_list = calloc(READ_BUFFER_SIZE, sizeof(struct Node));
+        struct Node* cmd_list = calloc(READ_BUFFER_SIZE, 
+                                       sizeof(struct Node));
         ll_initialize(cmd_list);
         c = fgetc(fp);
         buffer[i] = c;
@@ -26,10 +27,12 @@ void read_from_file(char* batchFile){
             cmd_list = clean_input(buffer);
 
             if (cmd_list == NULL) {
-                fprintf(stderr, "error: Expecting a linked list, recived NULL\n");
+                fprintf(stderr, 
+                        "error: Expecting a linked list, recived NULL\n");
                 exit(EXIT_FAILURE);
             }
 
+            printf("> ");
             ll_print(cmd_list);
             execute_command(cmd_list);
             ll_destroy(cmd_list);
@@ -39,7 +42,8 @@ void read_from_file(char* batchFile){
         }
 
         if (i >= READ_BUFFER_SIZE) {
-            fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
+            fprintf(stderr, 
+                    "Buffer overflow at get_line_from_stdin()\n");
 
             while(c != '\n'){
                 c = getchar();
@@ -157,10 +161,17 @@ void run_command_as_child_process(char** command) {
 
     } else if (rc == 0) {
         execvp(*command, command);
+        fprintf(stderr, "error: '%s': no such command\n", *command); 
+        exit(EXIT_FAILURE);
 
     } else {
         wait(NULL);
-    } 
+    }
+
+    int i;
+    for (i = 0; command[i] != NULL; ++i) {
+        free(command[i]);
+    }
 }
 
 void redirect_output_to_file(char** command, char* output_filename) { 
@@ -196,7 +207,7 @@ void execute_command(struct Node* start_of_command_list) {
          current_command = current_command->next) { 
 
         if ( strcmp(current_command->word, "exit") == 0) {
-            return;
+            exit(EXIT_SUCCESS);
 
         } else if ( strcmp(current_command->word, "cd") == 0) { 
             if (current_command->next != NULL) {
