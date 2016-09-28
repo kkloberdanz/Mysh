@@ -8,6 +8,65 @@
 #include "shell.h" 
 #include "linkedlist.h" 
 
+void read_from_file(char* batchFile){
+    FILE *fp;
+    char buffer[READ_BUFFER_SIZE];
+
+    fp = fopen(batchFile, "r");
+    char c = 'a';
+    int i = 0;
+    while (c != EOF) {
+        struct Node* cmd_list = calloc(READ_BUFFER_SIZE, sizeof(struct Node));
+        ll_initialize(cmd_list);
+        c = fgetc(fp);
+        printf("%c", c);
+        buffer[i] = c;
+        if (c == '\n') {
+
+            printf("buff: %s\n", buffer);
+            cmd_list = clean_input(buffer);
+
+            if (cmd_list == NULL) {
+                fprintf(stderr, "error: Expecting a linked list, recived NULL\n");
+                exit(EXIT_FAILURE);
+            }
+
+            ll_print(cmd_list);
+            execute_command(cmd_list);
+            ll_destroy(cmd_list);
+            i=0;
+        } else {
+            i++;
+        }
+    }
+    fclose(fp);
+}
+
+char* get_line_from_stdin() {
+    char c = 'a';
+    char* buffer = calloc(READ_BUFFER_SIZE, sizeof(char));
+
+    int i; 
+    for(i = 0; (i < READ_BUFFER_SIZE) && (c != '\n'); ++i) {
+	c = getchar();
+        buffer[i] = c;
+    }
+
+    if (i >= READ_BUFFER_SIZE) {
+        fprintf(stderr, "Buffer overflow at get_line_from_stdin()\n");
+
+	while(c != '\n'){
+	    c = getchar();
+	}
+
+	free(buffer);
+	return NULL;
+    }
+
+    return buffer;
+}
+
+/*
 char* get_line_from_stdin() {
     char c = 'a';
     char* buffer = calloc(READ_BUFFER_SIZE, sizeof(char));
@@ -25,13 +84,10 @@ char* get_line_from_stdin() {
 
     return buffer;
 }
+*/
 
 struct Node* clean_input(char* buffer) {
     int i;
-    /*
-     * TODO:
-     *     Remove spaces after tokens
-     */
     struct Node* command_list;
     command_list = malloc(sizeof(command_list));
     ll_initialize(command_list);

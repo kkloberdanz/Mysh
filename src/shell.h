@@ -24,6 +24,11 @@ struct Node* clean_input(char*);
 void execute_command(struct Node*);
 
 /*
+ * Forks command so that it is run as a sepparate process
+ */
+void run_command_as_child_process(char**);
+
+/*
  * Continues to loop until 'exit' is read from stdin, or an error occurs
  * Returns 0 if execution was successful, non-zero return shows an error
  */
