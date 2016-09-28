@@ -145,7 +145,6 @@ void execute_command(struct Node* start_of_command_list) {
              *     Handle > and & here
              */
 
-            //char* command = calloc(READ_BUFFER_SIZE, sizeof(char));
             char* output_filename = calloc(READ_BUFFER_SIZE, sizeof(char));
             output_filename[0] = '\0';
 
@@ -154,11 +153,6 @@ void execute_command(struct Node* start_of_command_list) {
             int i = 0;
             while (1) {
                 if (strcmp(current_command->word, ">") != 0) {
-                    /*
-                    strcat(command, current_command->word);
-                    strcat(command, " ");
-                    */
-                    //strcpy(command[i], current_command->word);
                     command[i] = strdup(current_command->word);
                 } else {
                     strcat(output_filename, current_command->next->word);
@@ -214,6 +208,7 @@ void execute_command(struct Node* start_of_command_list) {
             */
 
             run_command_as_child_process(command);
+            free(output_filename);
         }
     }
 }

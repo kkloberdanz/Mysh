@@ -32,7 +32,7 @@ void ll_print(struct Node* head) {
     }
 
     while (head->next != NULL) {
-        printf("%s, ", head->next->word);
+        printf("%s ", head->next->word);
         head = head->next;
     }
     printf("\n");
