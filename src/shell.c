@@ -5,9 +5,13 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "shell.h" 
 #include "linkedlist.h" 
+#include "globals.h" 
+
+struct ProcessIds* p;
 
 void read_from_file(char* batchFile){
     FILE *fp;
@@ -43,7 +47,7 @@ void read_from_file(char* batchFile){
 
         if (i >= READ_BUFFER_SIZE) {
             fprintf(stderr, 
-                    "Buffer overflow at get_line_from_stdin()\n");
+                    "Buffer overflow at read_from_file()\n");
 
             while(c != '\n'){
                 c = getchar();
@@ -160,9 +164,10 @@ void run_command_as_child_process(char** command) {
         exit(EXIT_FAILURE);
 
     } else if (rc == 0) {
-        execvp(*command, command);
-        fprintf(stderr, "error: '%s': no such command\n", *command); 
-        exit(EXIT_FAILURE);
+        if (execvp(*command, command) < 0) {
+            fprintf(stderr, "error: '%s': no such command\n", *command); 
+            exit(EXIT_FAILURE);
+        }
 
     } else {
         wait(NULL);
@@ -172,6 +177,63 @@ void run_command_as_child_process(char** command) {
     for (i = 0; command[i] != NULL; ++i) {
         free(command[i]);
     }
+}
+
+
+void run_command_as_child(char** command){
+    int rc = fork();
+    
+    if ((rc < 0)) { 
+        fprintf(stderr, "error: fork failed\n");
+        exit(EXIT_FAILURE);
+
+    } else if (rc == 0) {
+        if (execvp(*command, command) < 0) {
+            fprintf(stderr, "error: %s not a valid command", *command);
+            exit(EXIT_SUCCESS);
+        }
+
+    } else {
+        printf("id: %d\n", rc);
+        p->ids[p->place] = rc;
+        p->place ++;
+        p->length ++;
+        //wait(NULL);
+    } 
+}
+
+void wait_loop() {
+    int f = 1;
+    while (f > 0) {
+        int i;
+
+        if (p->length == 0) {
+            break;
+        }
+
+        for (i = 0; i < p->length; i++) {
+            if (p->ids[i] != NULL) {
+
+                int status;
+                pid_t return_pid = waitpid(p->ids[i], &status, WNOHANG); 
+
+                if (return_pid == -1) {
+                    printf("well shoot\n");
+                    return;
+
+                } else if (return_pid == 0) {
+                    f = 1;
+
+                } else if (return_pid == p->ids) {
+                    p->ids[i] = NULL;
+                    f = 0;
+                }
+
+            }
+        }
+    }
+    p->length = 0;
+    p->place = 0;
 }
 
 void redirect_output_to_file(char** command, char* output_filename) { 
@@ -209,10 +271,16 @@ void execute_command(struct Node* start_of_command_list) {
         if ( strcmp(current_command->word, "exit") == 0) {
             exit(EXIT_SUCCESS);
 
+        } else if ( strcmp(current_command->word, "wait") == 0) {
+            wait_loop();
+
         } else if ( strcmp(current_command->word, "cd") == 0) { 
+
             if (current_command->next != NULL) {
                 current_command = current_command->next;
+
                 struct stat st;
+
                 if (stat(current_command->word, &st) == 0) {
                     chdir(current_command->word);
 
@@ -223,11 +291,13 @@ void execute_command(struct Node* start_of_command_list) {
                     fprintf(stderr, "error: '%s' no such directory\n", 
                             current_command->word);
                 }
+
             } else {
                 chdir(getenv("HOME"));
             }
 
         } else if ( strcmp(current_command->word, "pwd") == 0) {
+
             char  tmp_buff[MAX_PATH_LEN];
             char* cwd = getcwd(tmp_buff, MAX_PATH_LEN);
             if (cwd != NULL) {
@@ -246,9 +316,17 @@ void execute_command(struct Node* start_of_command_list) {
             char* command[READ_BUFFER_SIZE];
 
             int i = 0;
+	        int process = 0;
             while (1) {
-                if (strcmp(current_command->word, ">") != 0) {
+
+                if (strcmp(current_command->word, ">") != 0 &&
+                    strcmp(current_command->word, "&") != 0) {
                     command[i] = strdup(current_command->word);
+
+                } else if (strcmp(current_command->word, "&") == 0){
+		            process = 1;
+		            command[i] = NULL;
+
                 } else {
                     strcat(output_filename, current_command->next->word);
 
@@ -278,6 +356,9 @@ void execute_command(struct Node* start_of_command_list) {
                 redirect_output_to_file(command, output_filename);
                 break;
 
+            } else if(process == 1){
+                run_command_as_child(command);
+
             // Not redirecting stdout, run as normal
             } else { 
                 run_command_as_child_process(command);
@@ -290,6 +371,8 @@ int shell_loop(void) {
     int exit_status;
     char* input_line; 
     struct Node* cmd_list;
+
+    p = calloc(1, sizeof(struct ProcessIds));
 
     char curr_dir[READ_BUFFER_SIZE];
     char curr_usr[READ_BUFFER_SIZE];
@@ -310,11 +393,7 @@ int shell_loop(void) {
             return EXIT_FAILURE;
         }
 
-        //printf("out: '%s'\n", input_line); 
-
-        //ll_print(cmd_list);
-        execute_command(cmd_list);
-
+        execute_command(cmd_list); 
         
         exit_status = strcmp(input_line, "exit"); 
         free(input_line);
@@ -325,5 +404,6 @@ int shell_loop(void) {
         }
     }
 
+    free(p);
     return 0;
 }
