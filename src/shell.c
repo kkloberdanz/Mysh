@@ -316,9 +316,8 @@ void execute_command(struct Node* start_of_command_list) {
             char* command[READ_BUFFER_SIZE];
 
             int i = 0;
-	        int process = 0;
+            int process = 0;
             while (1) {
-
                 if (strcmp(current_command->word, ">") != 0 &&
                     strcmp(current_command->word, "&") != 0) {
                     command[i] = strdup(current_command->word);
@@ -350,6 +349,9 @@ void execute_command(struct Node* start_of_command_list) {
                 i++;
             }
             command[i+1] = NULL;
+            if (command[0][0] == '\0') {
+                continue;
+            }
 
             // Redirect output
             if (output_filename[0] != '\0') {
